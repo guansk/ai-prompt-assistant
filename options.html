@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Prompt Manager - 设置</title>
+  <link rel="stylesheet" href="styles/options.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1 class="title">插件配置</h1>
+      <p class="subtitle">配置飞书 API 凭证和多维表数据源</p>
+    </header>
+
+    <div class="content">
+      <form id="configForm" class="form">
+        <div class="form-section">
+          <h2 class="section-title">飞书应用凭证</h2>
+          <p class="section-desc">在飞书开放平台创建自建应用后获取</p>
+          
+          <div class="form-group">
+            <label for="appId" class="form-label">
+              App ID
+              <span class="required">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="appId" 
+              class="form-input" 
+              placeholder="cli_xxxxxxxxxxxxxxxx"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="appSecret" class="form-label">
+              App Secret
+              <span class="required">*</span>
+            </label>
+            <input 
+              type="password" 
+              id="appSecret" 
+              class="form-input" 
+              placeholder="请输入 App Secret"
+              required
+            />
+            <p class="form-hint">敏感信息，仅存储在本地浏览器</p>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h2 class="section-title">多维表配置</h2>
+          <p class="section-desc">指定存储 Prompt 数据的飞书多维表</p>
+          
+          <div class="form-group">
+            <label for="bitableUrl" class="form-label">
+              多维表链接
+              <span class="required">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="bitableUrl" 
+              class="form-input" 
+              placeholder="https://xxx.feishu.cn/base/xxxxx?table=xxxxx"
+              required
+            />
+            <p class="form-hint">粘贴多维表的完整链接</p>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" id="saveBtn">
+            保存配置
+          </button>
+          <button type="button" class="btn-secondary" id="testBtn">
+            测试连接
+          </button>
+        </div>
+
+        <div id="message" class="message" style="display: none;"></div>
+      </form>
+
+      <div class="help-section">
+        <h3 class="help-title">📖 配置指南</h3>
+        <ol class="help-list">
+          <li>访问 <a href="https://open.feishu.cn/app" target="_blank">飞书开放平台</a> 创建自建应用</li>
+          <li>在应用详情页获取 App ID 和 App Secret</li>
+          <li>为应用添加"多维表"权限（仅需读取权限）</li>
+          <li>创建多维表，包含字段：Title（单行文本）、Content（多行文本）、Category（单选）、Status（单选）</li>
+          <li>从多维表 URL 中提取 App Token 和 Table ID</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

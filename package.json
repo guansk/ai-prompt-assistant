@@ -1,0 +1,19 @@
+{
+  "name": "team-prompt-manager",
+  "version": "1.0.0",
+  "description": "团队 Prompt 管理浏览器插件，基于飞书多维表",
+  "scripts": {
+    "build": "node build.js",
+    "zip": "node zip.js"
+  },
+  "keywords": [
+    "chrome-extension",
+    "prompt",
+    "feishu",
+    "team",
+    "chatgpt",
+    "claude"
+  ],
+  "author": "",
+  "license": "MIT"
+}
