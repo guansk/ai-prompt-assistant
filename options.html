@@ -90,6 +90,51 @@
           <li>创建多维表，包含字段：Title（单行文本）、Content（多行文本）、Category（单选）、Status（单选）</li>
           <li>从多维表 URL 中提取 App Token 和 Table ID</li>
         </ol>
+
+        <h3 class="help-title">✨ 参数化 Prompt 使用说明 <span class="version-badge">v1.1</span></h3>
+        <div class="feature-box">
+          <p class="feature-desc">在 Prompt 中使用变量，让一个模板适配多种场景！</p>
+          
+          <div class="syntax-section">
+            <h4 class="syntax-title">变量语法：</h4>
+            <div class="syntax-item">
+              <code class="syntax-code">[变量名]</code>
+              <span class="syntax-label required-label">必填</span>
+              <span class="syntax-desc">用户必须填写此字段</span>
+            </div>
+            <div class="syntax-item">
+              <code class="syntax-code">[?变量名]</code>
+              <span class="syntax-label optional-label">选填</span>
+              <span class="syntax-desc">用户可以留空，留空时替换为"无"</span>
+            </div>
+          </div>
+
+          <div class="example-section">
+            <h4 class="example-title">示例：</h4>
+            <div class="example-box">
+              <div class="example-label">在飞书多维表的 Content 字段中配置：</div>
+              <pre class="example-code">请将以下内容从 [源语言] 翻译成 [目标语言]：
+
+专业领域：[?专业领域]
+语气风格：[?语气风格]
+
+[待翻译内容]</pre>
+              <div class="example-result">
+                <strong>使用时：</strong>点击后会弹出表单，填写变量后自动生成完整 Prompt
+              </div>
+            </div>
+          </div>
+
+          <div class="tips-section">
+            <h4 class="tips-title">💡 使用技巧：</h4>
+            <ul class="tips-list">
+              <li>变量名要清晰明了，让用户一看就知道该填什么</li>
+              <li>核心信息用必填 <code>[变量名]</code>，补充信息用选填 <code>[?变量名]</code></li>
+              <li>建议每个 Prompt 不超过 5-6 个变量</li>
+              <li>无变量的 Prompt 保持原有的一键填充行为</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   </div>

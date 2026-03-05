@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const settingsBtn = document.getElementById('settingsBtn');
   const goSettingsBtn = document.getElementById('goSettingsBtn');
   const retryBtn = document.getElementById('retryBtn');
+  const learnMoreBtn = document.getElementById('learnMoreBtn');
 
   // 初始化
   await init();
@@ -36,6 +37,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   retryBtn.addEventListener('click', async () => {
     await loadPrompts(true);
   });
+
+  // 了解更多
+  if (learnMoreBtn) {
+    learnMoreBtn.addEventListener('click', () => {
+      chrome.runtime.openOptionsPage();
+    });
+  }
 
   async function init() {
     // 检查配置
@@ -220,6 +228,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       titleDiv.className = 'prompt-title';
       titleDiv.textContent = prompt.title;
       
+      // 检查是否有变量
+      const variables = parseVariables(prompt.content);
+      if (variables.length > 0) {
+        const paramBadge = document.createElement('span');
+        paramBadge.className = 'param-badge';
+        paramBadge.textContent = `${variables.length} 个参数`;
+        paramBadge.title = '此 Prompt 包含可填写的参数';
+        titleDiv.appendChild(paramBadge);
+      }
+      
       if (prompt.category) {
         const categorySpan = document.createElement('span');
         categorySpan.className = 'prompt-category';
@@ -236,13 +254,151 @@ document.addEventListener('DOMContentLoaded', async () => {
       
       // 点击填充
       item.addEventListener('click', async () => {
-        await fillPrompt(prompt.content);
+        await handlePromptClick(prompt);
       });
       
       listContainer.appendChild(item);
     });
 
     showView('list');
+  }
+
+  async function handlePromptClick(prompt) {
+    const variables = parseVariables(prompt.content);
+    
+    if (variables.length === 0) {
+      // 无变量，直接填充
+      await fillPrompt(prompt.content);
+    } else {
+      // 有变量，显示表单
+      showVariableForm(prompt, variables);
+    }
+  }
+
+  function parseVariables(content) {
+    const variables = [];
+    // 匹配 [?变量名] 和 [变量名]
+    const regex = /\[(\??[^\]]+)\]/g;
+    let match;
+    
+    while ((match = regex.exec(content)) !== null) {
+      const fullMatch = match[0];
+      const varName = match[1];
+      const isOptional = varName.startsWith('?');
+      const cleanName = isOptional ? varName.substring(1) : varName;
+      
+      variables.push({
+        placeholder: fullMatch,
+        name: cleanName,
+        required: !isOptional
+      });
+    }
+    
+    return variables;
+  }
+
+  function showVariableForm(prompt, variables) {
+    const formContainer = document.getElementById('variableForm');
+    const formTitle = document.getElementById('formTitle');
+    const formFields = document.getElementById('formFields');
+    const confirmBtn = document.getElementById('confirmFillBtn');
+    const cancelBtn = document.getElementById('cancelFormBtn');
+    
+    // 设置标题
+    formTitle.textContent = prompt.title;
+    
+    // 清空表单字段
+    while (formFields.firstChild) {
+      formFields.removeChild(formFields.firstChild);
+    }
+    
+    // 生成表单字段
+    variables.forEach((variable, index) => {
+      const fieldGroup = document.createElement('div');
+      fieldGroup.className = 'form-field';
+      
+      const label = document.createElement('label');
+      label.className = 'form-label';
+      label.htmlFor = `var-${index}`;
+      
+      if (variable.required) {
+        const requiredMark = document.createElement('span');
+        requiredMark.className = 'required-mark';
+        requiredMark.textContent = '* ';
+        label.appendChild(requiredMark);
+      }
+      
+      const labelText = document.createTextNode(variable.name);
+      label.appendChild(labelText);
+      
+      if (!variable.required) {
+        const optionalMark = document.createElement('span');
+        optionalMark.className = 'optional-mark';
+        optionalMark.textContent = ' (选填)';
+        label.appendChild(optionalMark);
+      }
+      
+      const textarea = document.createElement('textarea');
+      textarea.id = `var-${index}`;
+      textarea.className = 'form-input';
+      textarea.placeholder = variable.required ? '请输入...' : '选填，可留空';
+      textarea.rows = 3;
+      textarea.dataset.varIndex = index;
+      
+      fieldGroup.appendChild(label);
+      fieldGroup.appendChild(textarea);
+      formFields.appendChild(fieldGroup);
+    });
+    
+    // 确认按钮事件
+    confirmBtn.onclick = async () => {
+      const values = [];
+      let hasError = false;
+      
+      // 收集所有输入值
+      variables.forEach((variable, index) => {
+        const input = document.getElementById(`var-${index}`);
+        const value = input.value.trim();
+        
+        // 验证必填项
+        if (variable.required && !value) {
+          input.classList.add('error');
+          hasError = true;
+        } else {
+          input.classList.remove('error');
+        }
+        
+        values.push(value);
+      });
+      
+      if (hasError) {
+        alert('请填写所有必填项');
+        return;
+      }
+      
+      // 替换变量并填充
+      let finalContent = prompt.content;
+      variables.forEach((variable, index) => {
+        const value = values[index];
+        if (value) {
+          // 有值，直接替换
+          finalContent = finalContent.replace(variable.placeholder, value);
+        } else {
+          // 选填项为空，替换为"无"或删除
+          finalContent = finalContent.replace(variable.placeholder, '无');
+        }
+      });
+      
+      await fillPrompt(finalContent);
+    };
+    
+    // 取消按钮事件
+    cancelBtn.onclick = () => {
+      showView('list');
+    };
+    
+    // 显示表单视图
+    showView('form');
   }
 
   async function fillPrompt(content) {
@@ -308,7 +464,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       loading: document.getElementById('loading'),
       error: document.getElementById('error'),
       list: document.getElementById('promptList'),
-      empty: document.getElementById('empty')
+      empty: document.getElementById('empty'),
+      form: document.getElementById('variableForm')
     };
 
     Object.values(views).forEach(view => {
@@ -317,6 +474,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (viewName === 'list') {
       views.list.style.display = 'flex';
+    } else if (viewName === 'form') {
+      views.form.style.display = 'flex';
     } else if (views[viewName]) {
       views[viewName].style.display = 'flex';
     }
