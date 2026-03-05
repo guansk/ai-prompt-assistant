@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Team Prompt Manager",
+  "name": "AI Prompt 助手 - 飞书多维表驱动",
   "version": "1.1.0",
-  "description": "团队 Prompt 管理工具，基于飞书多维表实现团队级共享",
+  "description": "用飞书多维表管理和调用你的 Prompt 知识库，支持参数化模板，适配个人到团队的所有场景",
   "permissions": [
     "storage",
     "activeTab",

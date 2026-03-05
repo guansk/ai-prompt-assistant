@@ -1,16 +1,16 @@
-# Team Prompt Manager - 团队 Prompt 管理浏览器插件
+# AI Prompt 助手 - 飞书多维表驱动
 
-一款基于飞书多维表的轻量级 Chrome 浏览器插件，实现团队 Prompt 的统一管理和一键填充。
+用飞书多维表管理你的 Prompt 知识库，跨设备同步，随时调用。无论是个人知识管理还是团队协作，都能轻松搞定。
 
 ## ✨ 核心特性
 
-- 🎯 **一键填充**：在 ChatGPT/Claude/Gemini 页面快速调用团队沉淀的 Prompt
-- 📊 **飞书管理**：使用飞书多维表作为数据后台，无需开发管理系统
-- 🔍 **快速搜索**：支持标题和内容的模糊搜索
-- ✨ **参数化 Prompt** (v1.1)：支持变量占位符，一个模板适配多种场景
-- 🎨 **简洁设计**：现代化 UI，流畅的交互体验
-- 💾 **智能缓存**：本地缓存机制，提升响应速度
-- 🔒 **安全可靠**：敏感信息仅存储在本地浏览器
+- 📊 **飞书多维表驱动**：用熟悉的表格管理 Prompt，跨设备自动同步，无需额外系统
+- 🎯 **一键调用**：在 ChatGPT/Claude/Gemini 页面快速填充你的 Prompt 库
+- ✨ **参数化模板** (v1.1)：支持变量占位符，一个模板适配多种场景
+- 🔍 **快速搜索**：标题和内容的模糊搜索，秒找所需
+- 🚀 **轻量极客**：Low-Code 理念，零学习成本，开箱即用
+- 💼 **个人到团队**：从个人 PKM 到团队协作的无缝扩展
+- 🔒 **安全可靠**：API 凭证仅存储在本地浏览器
 
 ## 🆕 v1.1 新特性：参数化 Prompt
 
@@ -75,7 +75,7 @@
 ```bash
 # 克隆项目
 git clone <repository-url>
-cd team-prompt-manager
+cd ai-prompt-assistant
 
 # 生成图标（可选）
 # 在浏览器中打开 generate-icons.html，下载图标到 icons 目录
@@ -107,7 +107,7 @@ cd team-prompt-manager
 ## 📁 项目结构
 
 ```
-team-prompt-manager/
+ai-prompt-assistant/
 ├── manifest.json           # 插件配置文件
 ├── popup.html             # 弹窗页面
 ├── popup.js               # 弹窗逻辑
@@ -175,4 +175,4 @@ MIT License
 
 ---
 
-Made with ❤️ for better team collaboration
+Made with ❤️ for AI power users
