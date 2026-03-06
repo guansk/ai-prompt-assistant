@@ -50,7 +50,7 @@
 4. **测试修改**
    - 在 Chrome 中加载插件测试
    - 确保没有破坏现有功能
-   - 参考 [测试清单.md](./测试清单.md)
+   - 参考 [开发文档 - 测试清单](./docs/DEVELOPMENT.md#测试清单)
 
 5. **提交更改**
    ```bash
@@ -177,7 +177,7 @@ team-prompt-manager/
    - Background：在扩展程序页面点击"检查视图"
 
 3. **测试**
-   - 参考 [测试清单.md](./测试清单.md)
+   - 参考 [开发文档 - 测试清单](./docs/DEVELOPMENT.md#测试清单)
    - 确保所有功能正常工作
    - 测试边界情况
 
@@ -205,6 +205,12 @@ team-prompt-manager/
 ## 许可证
 
 通过贡献代码，你同意你的贡献将在 MIT 许可证下发布。
+
+## 相关文档
+
+- [用户指南](./docs/USER_GUIDE.md) - 了解功能使用
+- [开发文档](./docs/DEVELOPMENT.md) - 技术细节和调试
+- [飞书配置](./docs/FEISHU_SETUP.md) - 数据表配置
 
 ## 问题？
 
