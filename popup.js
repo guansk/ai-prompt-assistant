@@ -21,7 +21,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 刷新数据
   refreshBtn.addEventListener('click', async () => {
+    // 清除表单状态，强制显示列表
+    await chrome.storage.local.remove('currentFormPromptId');
     await loadPrompts(true);
+    renderPrompts();
   });
 
   // 打开设置页面
@@ -54,8 +57,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
+    // 检查是否有未完成的表单
+    const formState = await chrome.storage.local.get(['currentFormPromptId']);
+    
     // 加载数据
     await loadPrompts(false);
+    
+    // 数据加载完成后，决定显示什么
+    if (formState.currentFormPromptId && allPrompts.length > 0) {
+      // 有未完成的表单，恢复表单状态
+      const prompt = allPrompts.find(p => p.id === formState.currentFormPromptId);
+      if (prompt) {
+        const variables = parseVariables(prompt.content);
+        if (variables.length > 0) {
+          await showVariableForm(prompt, variables);
+          return; // 已显示表单，不再显示列表
+        }
+      }
+    }
+    
+    // 没有未完成的表单，显示列表
+    renderPrompts();
   }
 
   async function loadPrompts(forceRefresh) {
@@ -71,7 +93,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (cached.cachedPrompts && cached.cacheTime && (Date.now() - cached.cacheTime < cacheExpiry)) {
           allPrompts = cached.cachedPrompts;
           filteredPrompts = allPrompts;
-          renderPrompts();
+          
+          // 不立即渲染，让 init 函数决定是显示列表还是表单
+          // renderPrompts();
           
           // 后台异步刷新
           fetchPromptsFromAPI().catch(console.error);
@@ -192,7 +216,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     filteredPrompts = allPrompts;
-    renderPrompts();
+    
+    // 不自动渲染，让调用者决定
+    // renderPrompts();
   }
 
   function filterPrompts(keyword) {
@@ -271,7 +297,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       await fillPrompt(prompt.content);
     } else {
       // 有变量，显示表单
-      showVariableForm(prompt, variables);
+      await showVariableForm(prompt, variables);
     }
   }
 
@@ -297,12 +323,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     return variables;
   }
 
-  function showVariableForm(prompt, variables) {
+  async function showVariableForm(prompt, variables) {
     const formContainer = document.getElementById('variableForm');
     const formTitle = document.getElementById('formTitle');
     const formFields = document.getElementById('formFields');
     const confirmBtn = document.getElementById('confirmFillBtn');
     const cancelBtn = document.getElementById('cancelFormBtn');
+    
+    // 记住当前正在编辑的 prompt
+    await chrome.storage.local.set({ currentFormPromptId: prompt.id });
     
     // 设置标题
     formTitle.textContent = prompt.title;
@@ -311,6 +340,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     while (formFields.firstChild) {
       formFields.removeChild(formFields.firstChild);
     }
+    
+    // 加载缓存的参数值
+    const cacheKey = `paramCache_${prompt.id}`;
+    const cached = await chrome.storage.local.get([cacheKey]);
+    const cachedValues = cached[cacheKey] || {};
     
     // 生成表单字段
     variables.forEach((variable, index) => {
@@ -344,6 +378,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       textarea.placeholder = variable.required ? '请输入...' : '选填，可留空';
       textarea.rows = 3;
       textarea.dataset.varIndex = index;
+      textarea.dataset.varName = variable.name;
+      
+      // 从缓存中恢复值
+      const cachedValue = cachedValues[variable.name];
+      if (cachedValue) {
+        textarea.value = cachedValue;
+      }
+      
+      // 实时保存到缓存（防止切换标签页丢失）
+      textarea.addEventListener('input', async (e) => {
+        const currentCache = await chrome.storage.local.get([cacheKey]);
+        const currentValues = currentCache[cacheKey] || {};
+        currentValues[variable.name] = e.target.value.trim();
+        await chrome.storage.local.set({ [cacheKey]: currentValues });
+      });
       
       fieldGroup.appendChild(label);
       fieldGroup.appendChild(textarea);
@@ -353,6 +402,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 确认按钮事件
     confirmBtn.onclick = async () => {
       const values = [];
+      const cacheData = {};
       let hasError = false;
       
       // 收集所有输入值
@@ -369,12 +419,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         values.push(value);
+        
+        // 保存到缓存对象（包括空值，以便下次清空）
+        cacheData[variable.name] = value;
       });
       
       if (hasError) {
         alert('请填写所有必填项');
         return;
       }
+      
+      // 保存参数值到缓存
+      const cacheKey = `paramCache_${prompt.id}`;
+      await chrome.storage.local.set({ [cacheKey]: cacheData });
+      
+      // 清除表单状态记录
+      await chrome.storage.local.remove('currentFormPromptId');
       
       // 替换变量并填充
       let finalContent = prompt.content;
@@ -393,8 +453,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     
     // 取消按钮事件
-    cancelBtn.onclick = () => {
+    cancelBtn.onclick = async () => {
+      // 清除表单状态记录
+      await chrome.storage.local.remove('currentFormPromptId');
       showView('list');
+    };
+    
+    // 清除缓存按钮事件
+    const clearCacheBtn = document.getElementById('clearCacheBtn');
+    clearCacheBtn.onclick = async () => {
+      if (confirm('确定要清除此 Prompt 的缓存参数值吗？')) {
+        const cacheKey = `paramCache_${prompt.id}`;
+        await chrome.storage.local.remove(cacheKey);
+        
+        // 清空所有输入框
+        variables.forEach((variable, index) => {
+          const input = document.getElementById(`var-${index}`);
+          if (input) {
+            input.value = '';
+          }
+        });
+        
+        alert('缓存已清除');
+      }
     };
     
     // 显示表单视图

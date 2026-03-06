@@ -351,13 +351,39 @@ body {
   padding: 16px 20px;
   border-bottom: 1px solid #e5e7eb;
   background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .form-title {
   font-size: 16px;
   font-weight: 600;
   color: #111827;
-  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.btn-clear-cache {
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.btn-clear-cache:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.btn-clear-cache:active {
+  transform: scale(0.95);
 }
 
 .form-help {
