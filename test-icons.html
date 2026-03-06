@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>图标测试</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 40px;
+      background: #f9fafb;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    h1 {
+      margin-bottom: 30px;
+      color: #111827;
+    }
+    
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+    
+    .icon-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 20px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+    
+    .icon-item:hover {
+      border-color: #3b82f6;
+      background: #f9fafb;
+    }
+    
+    .icon-item i {
+      width: 32px;
+      height: 32px;
+      color: #6b7280;
+    }
+    
+    .icon-name {
+      font-size: 12px;
+      color: #6b7280;
+      text-align: center;
+    }
+    
+    .test-section {
+      margin-bottom: 40px;
+    }
+    
+    .test-section h2 {
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: #374151;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    
+    .btn svg {
+      width: 16px;
+      height: 16px;
+    }
+    
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #2563eb;
+    }
+    
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #374151;
+    }
+    
+    .btn-secondary:hover {
+      background: #e5e7eb;
+    }
+    
+    .btn-icon {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+    
+    .btn-icon:hover {
+      background: #e5e7eb;
+      color: #111827;
+    }
+    
+    .btn-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+    
+    .status-icons {
+      display: flex;
+      gap: 20px;
+    }
+    
+    .status-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .status-icon {
+      width: 48px;
+      height: 48px;
+    }
+    
+    .status-icon.success {
+      color: #10b981;
+    }
+    
+    .status-icon.warning {
+      color: #f59e0b;
+    }
+    
+    .status-icon.error {
+      color: #ef4444;
+    }
+    
+    .status-icon.info {
+      color: #3b82f6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Lucide Icons 测试页面</h1>
+    
+    <div class="test-section">
+      <h2>项目中使用的图标</h2>
+      <div class="icon-grid">
+        <div class="icon-item">
+          <i data-lucide="refresh-cw"></i>
+          <span class="icon-name">refresh-cw</span>
+        </div>
+        <div class="icon-item">
+          <i data-lucide="settings"></i>
+          <span class="icon-name">settings</span>
+        </div>
+        <div class="icon-item">
+          <i data-lucide="search"></i>
+          <span class="icon-name">search</span>
+        </div>
+        <div class="icon-item">
+          <i data-lucide="arrow-left"></i>
+          <span class="icon-name">arrow-left</span>
+        </div>
+        <div class="icon-item">
+          <i data-lucide="trash-2"></i>
+          <span class="icon-name">trash-2</span>
+        </div>
+        <div class="icon-item">
+          <i data-lucide="send"></i>
+          <span class="icon-name">send</span>
+        </div>
+        <div class="icon-item">
+          <i data-lucide="alert-circle"></i>
+          <span class="icon-name">alert-circle</span>
+        </div>
+        <div class="icon-item">
+          <i data-lucide="file-text"></i>
+          <span class="icon-name">file-text</span>
+        </div>
+        <div class="icon-item">
+          <i data-lucide="x-circle"></i>
+          <span class="icon-name">x-circle</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="test-section">
+      <h2>按钮样式测试</h2>
+      <div class="button-group">
+        <button class="btn btn-primary">
+          <i data-lucide="send"></i>
+          <span>生成并填入</span>
+        </button>
+        <button class="btn btn-secondary">
+          <i data-lucide="arrow-left"></i>
+          <span>返回</span>
+        </button>
+        <button class="btn btn-icon">
+          <i data-lucide="refresh-cw"></i>
+        </button>
+        <button class="btn btn-icon">
+          <i data-lucide="settings"></i>
+        </button>
+        <button class="btn btn-icon">
+          <i data-lucide="trash-2"></i>
+        </button>
+      </div>
+    </div>
+    
+    <div class="test-section">
+      <h2>状态图标测试</h2>
+      <div class="status-icons">
+        <div class="status-item">
+          <i data-lucide="check-circle" class="status-icon success"></i>
+          <span class="icon-name">成功</span>
+        </div>
+        <div class="status-item">
+          <i data-lucide="alert-circle" class="status-icon warning"></i>
+          <span class="icon-name">警告</span>
+        </div>
+        <div class="status-item">
+          <i data-lucide="x-circle" class="status-icon error"></i>
+          <span class="icon-name">错误</span>
+        </div>
+        <div class="status-item">
+          <i data-lucide="info" class="status-icon info"></i>
+          <span class="icon-name">信息</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="test-section">
+      <h2>更多推荐图标</h2>
+      <div class="icon-grid">
+        <div class="icon-item">
+          <i data-lucide="plus"></i>
+          <span class="icon-name">plus</span>
+        </div>
+        <div class="icon-item">
+          <i data-lucide="edit"></i>
+          <span class="icon-name">edit</span>
+        </div>
+        <div class="icon-item">
+          <i data-lucide="copy"></i>
+          <span class="icon-name">copy</span>
+        </div>
+        <div class="icon-item">
+          <i data-lucide="download"></i>
+          <span class="icon-name">download</span>
+        </div>
+        <div class="icon-item">
+          <i data-lucide="upload"></i>
+          <span class="icon-name">upload</span>
+        </div>
+        <div class="icon-item">
+          <i data-lucide="star"></i>
+          <span class="icon-name">star</span>
+        </div>
+        <div class="icon-item">
+          <i data-lucide="bookmark"></i>
+          <span class="icon-name">bookmark</span>
+        </div>
+        <div class="icon-item">
+          <i data-lucide="share-2"></i>
+          <span class="icon-name">share-2</span>
+        </div>
+        <div class="icon-item">
+          <i data-lucide="filter"></i>
+          <span class="icon-name">filter</span>
+        </div>
+        <div class="icon-item">
+          <i data-lucide="menu"></i>
+          <span class="icon-name">menu</span>
+        </div>
+        <div class="icon-item">
+          <i data-lucide="more-horizontal"></i>
+          <span class="icon-name">more-horizontal</span>
+        </div>
+        <div class="icon-item">
+          <i data-lucide="external-link"></i>
+          <span class="icon-name">external-link</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // 初始化所有图标
+    lucide.createIcons();
+    
+    console.log('✅ Lucide Icons 加载成功！');
+    console.log('📦 版本:', lucide.VERSION || 'latest');
+  </script>
+</body>
+</html>

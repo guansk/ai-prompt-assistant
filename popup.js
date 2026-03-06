@@ -4,14 +4,42 @@ let filteredPrompts = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
   const searchInput = document.getElementById('searchInput');
+  const searchBox = document.getElementById('searchBox');
+  const searchBtn = document.getElementById('searchBtn');
+  const closeSearchBtn = document.getElementById('closeSearchBtn');
   const refreshBtn = document.getElementById('refreshBtn');
   const settingsBtn = document.getElementById('settingsBtn');
   const goSettingsBtn = document.getElementById('goSettingsBtn');
   const retryBtn = document.getElementById('retryBtn');
-  const learnMoreBtn = document.getElementById('learnMoreBtn');
 
   // 初始化
   await init();
+
+  // 搜索按钮 - 展开搜索框
+  searchBtn.addEventListener('click', () => {
+    searchBox.style.display = 'flex';
+    searchInput.focus();
+    // 重新初始化图标
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+  });
+
+  // 关闭搜索按钮
+  closeSearchBtn.addEventListener('click', () => {
+    searchBox.style.display = 'none';
+    searchInput.value = '';
+    filterPrompts('');
+  });
+
+  // ESC 键关闭搜索
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      searchBox.style.display = 'none';
+      searchInput.value = '';
+      filterPrompts('');
+    }
+  });
 
   // 搜索功能
   searchInput.addEventListener('input', (e) => {
@@ -40,13 +68,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   retryBtn.addEventListener('click', async () => {
     await loadPrompts(true);
   });
-
-  // 了解更多
-  if (learnMoreBtn) {
-    learnMoreBtn.addEventListener('click', () => {
-      chrome.runtime.openOptionsPage();
-    });
-  }
 
   async function init() {
     // 检查配置
@@ -287,6 +308,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     showView('list');
+    
+    // 初始化新添加的图标
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
   }
 
   async function handlePromptClick(prompt) {
@@ -324,7 +350,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function showVariableForm(prompt, variables) {
-    const formContainer = document.getElementById('variableForm');
     const formTitle = document.getElementById('formTitle');
     const formFields = document.getElementById('formFields');
     const confirmBtn = document.getElementById('confirmFillBtn');
@@ -355,22 +380,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       label.className = 'form-label';
       label.htmlFor = `var-${index}`;
       
-      if (variable.required) {
-        const requiredMark = document.createElement('span');
-        requiredMark.className = 'required-mark';
-        requiredMark.textContent = '* ';
-        label.appendChild(requiredMark);
-      }
-      
-      const labelText = document.createTextNode(variable.name);
-      label.appendChild(labelText);
-      
-      if (!variable.required) {
-        const optionalMark = document.createElement('span');
-        optionalMark.className = 'optional-mark';
-        optionalMark.textContent = ' (选填)';
-        label.appendChild(optionalMark);
-      }
+      // 构建标签文本
+      const labelContent = variable.required 
+        ? `${variable.name} *`
+        : `${variable.name} (选填)`;
+      label.textContent = labelContent;
       
       const textarea = document.createElement('textarea');
       textarea.id = `var-${index}`;
@@ -462,24 +476,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 清除缓存按钮事件
     const clearCacheBtn = document.getElementById('clearCacheBtn');
     clearCacheBtn.onclick = async () => {
-      if (confirm('确定要清除此 Prompt 的缓存参数值吗？')) {
-        const cacheKey = `paramCache_${prompt.id}`;
-        await chrome.storage.local.remove(cacheKey);
-        
-        // 清空所有输入框
-        variables.forEach((variable, index) => {
-          const input = document.getElementById(`var-${index}`);
-          if (input) {
-            input.value = '';
-          }
-        });
-        
-        alert('缓存已清除');
-      }
+      const cacheKey = `paramCache_${prompt.id}`;
+      await chrome.storage.local.remove(cacheKey);
+      
+      // 清空所有输入框
+      variables.forEach((variable, index) => {
+        const input = document.getElementById(`var-${index}`);
+        if (input) {
+          input.value = '';
+        }
+      });
     };
     
     // 显示表单视图
     showView('form');
+    
+    // 初始化新添加的图标
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
   }
 
   async function fillPrompt(content) {
@@ -559,6 +574,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       views.form.style.display = 'flex';
     } else if (views[viewName]) {
       views[viewName].style.display = 'flex';
+    }
+    
+    // 初始化图标
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
     }
   }
 });

@@ -5,41 +5,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Team Prompt Manager</title>
   <link rel="stylesheet" href="styles/popup.css">
+  <script src="libs/lucide.min.js"></script>
 </head>
 <body>
   <div class="container">
     <header class="header">
-      <h1 class="title">Prompt 库</h1>
-      <button class="btn-icon btn-refresh" id="refreshBtn" title="刷新数据">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M13.65 2.35C12.2 0.9 10.21 0 8 0 3.58 0 0.01 3.58 0.01 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L9 7h7V0l-2.35 2.35z" fill="currentColor"/>
-        </svg>
-      </button>
-      <button class="btn-icon btn-settings" id="settingsBtn" title="设置">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M13.5 8c0-.34-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C8.46.19 8.25 0 8 0h-4c-.25 0-.46.19-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L2.57 7.02c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.23.24.42.49.42h4c.25 0 .46-.19.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65c.04-.32.07-.64.07-.98zM8 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z" fill="currentColor"/>
-        </svg>
-      </button>
+      <h1 class="title">我的提示词</h1>
+      <div class="header-actions">
+        <button class="btn-icon btn-search" id="searchBtn" title="搜索">
+          <i data-lucide="search"></i>
+        </button>
+        <button class="btn-icon btn-refresh" id="refreshBtn" title="刷新">
+          <i data-lucide="refresh-cw"></i>
+        </button>
+        <button class="btn-icon btn-settings" id="settingsBtn" title="设置">
+          <i data-lucide="settings"></i>
+        </button>
+      </div>
     </header>
 
-    <div class="search-box">
-      <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <path d="M11.44 10.73l4.41 4.42-0.71 0.71-4.41-4.42c-1.05 0.82-2.37 1.31-3.81 1.31-3.45 0-6.25-2.8-6.25-6.25s2.8-6.25 6.25-6.25 6.25 2.8 6.25 6.25c0 1.44-0.49 2.76-1.31 3.81l-0.42 0.42zM6.92 1.75c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5z" fill="currentColor"/>
-      </svg>
-      <input type="text" id="searchInput" placeholder="搜索 Prompt..." />
+    <div class="search-box" id="searchBox" style="display: none;">
+      <i data-lucide="search" class="search-icon"></i>
+      <input type="text" id="searchInput" placeholder="搜索提示词..." />
+      <button class="btn-icon btn-close-search" id="closeSearchBtn" title="关闭搜索">
+        <i data-lucide="x"></i>
+      </button>
     </div>
 
     <div id="content">
       <!-- 未配置状态 -->
       <div id="unconfigured" class="state-view" style="display: none;">
         <div class="empty-state">
-          <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-            <circle cx="32" cy="32" r="30" stroke="#E5E7EB" stroke-width="2"/>
-            <path d="M32 20v24M32 48h.02" stroke="#9CA3AF" stroke-width="3" stroke-linecap="round"/>
-          </svg>
-          <p class="empty-title">未完成配置</p>
-          <p class="empty-desc">请先配置飞书 API 参数</p>
-          <button class="btn-primary" id="goSettingsBtn">前往配置</button>
+          <i data-lucide="alert-circle" class="empty-icon warning"></i>
+          <p class="empty-title">还未配置</p>
+          <p class="empty-desc">需要先连接飞书多维表</p>
+          <button class="btn-primary" id="goSettingsBtn">去设置</button>
         </div>
       </div>
 
@@ -55,10 +55,7 @@
       <!-- 错误状态 -->
       <div id="error" class="state-view" style="display: none;">
         <div class="empty-state">
-          <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-            <circle cx="32" cy="32" r="30" stroke="#FEE2E2" stroke-width="2"/>
-            <path d="M32 20v16M32 44h.02" stroke="#EF4444" stroke-width="3" stroke-linecap="round"/>
-          </svg>
+          <i data-lucide="x-circle" class="empty-icon error"></i>
           <p class="empty-title">加载失败</p>
           <p class="empty-desc" id="errorMessage">请检查网络连接或配置信息</p>
           <button class="btn-secondary" id="retryBtn">重试</button>
@@ -71,44 +68,40 @@
       <!-- 空状态 -->
       <div id="empty" class="state-view" style="display: none;">
         <div class="empty-state">
-          <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-            <rect x="12" y="16" width="40" height="36" rx="2" stroke="#E5E7EB" stroke-width="2"/>
-            <path d="M20 28h24M20 36h16" stroke="#D1D5DB" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          <p class="empty-title">暂无 Prompt</p>
-          <p class="empty-desc">请在飞书多维表中添加数据</p>
-          <div class="empty-tip">
-            <p class="tip-title">💡 使用参数化 Prompt</p>
-            <p class="tip-desc">在 Content 中使用 <code>[变量名]</code> 创建可填写的参数</p>
-            <button class="btn-link" id="learnMoreBtn">了解更多</button>
-          </div>
+          <i data-lucide="file-text" class="empty-icon"></i>
+          <p class="empty-title">还没有提示词</p>
+          <p class="empty-desc">在飞书多维表中添加后即可使用</p>
         </div>
       </div>
 
       <!-- 变量填充表单 -->
       <div id="variableForm" class="variable-form" style="display: none;">
         <div class="form-header">
+          <button class="btn-back" id="cancelFormBtn" title="返回">
+            <i data-lucide="arrow-left"></i>
+          </button>
           <h2 class="form-title" id="formTitle">填写参数</h2>
-          <div class="form-help">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
-              <path d="M8 12v.01M8 9v-1c.83 0 1.5-.67 1.5-1.5S8.83 5 8 5s-1.5.67-1.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-            <span>带 <span class="required-mark">*</span> 为必填项，其他为选填</span>
-          </div>
-          <button class="btn-link btn-clear-cache" id="clearCacheBtn" title="清除已保存的参数值">清除缓存</button>
+          <button class="btn-text btn-clear-cache" id="clearCacheBtn" title="清空已填写的内容">
+            <i data-lucide="trash-2"></i>
+          </button>
         </div>
         <div class="form-body">
           <div id="formFields" class="form-fields"></div>
         </div>
         <div class="form-footer">
-          <button class="btn-secondary" id="cancelFormBtn">返回列表</button>
-          <button class="btn-primary" id="confirmFillBtn">确认生成并填入</button>
+          <button class="btn-primary btn-submit" id="confirmFillBtn">
+            <i data-lucide="send"></i>
+            <span>生成并填入</span>
+          </button>
         </div>
       </div>
     </div>
   </div>
 
   <script src="popup.js"></script>
+  <script>
+    // 初始化 Lucide 图标
+    lucide.createIcons();
+  </script>
 </body>
 </html>
