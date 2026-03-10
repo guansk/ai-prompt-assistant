@@ -1,5 +1,8 @@
 // 配置页面逻辑
 document.addEventListener('DOMContentLoaded', async () => {
+  // 初始化 Lucide 图标
+  lucide.createIcons();
+
   const form = document.getElementById('configForm');
   const saveBtn = document.getElementById('saveBtn');
   const testBtn = document.getElementById('testBtn');

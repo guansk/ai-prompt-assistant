@@ -3,6 +3,9 @@ let allPrompts = [];
 let filteredPrompts = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // 初始化 Lucide 图标
+  lucide.createIcons();
+
   const searchInput = document.getElementById('searchInput');
   const searchBox = document.getElementById('searchBox');
   const searchBtn = document.getElementById('searchBtn');
