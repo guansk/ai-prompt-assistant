@@ -186,9 +186,45 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const accessToken = tokenData.tenant_access_token;
 
+    // 如果没有 tableId，获取第一个表格
+    let finalTableId = config.tableId;
+    
+    if (!finalTableId) {
+      console.log('未提供 Table ID，尝试获取第一个表格...');
+      
+      const tablesResponse = await fetch(
+        `${usedDomain}/open-apis/bitable/v1/apps/${config.appToken}/tables?page_size=1`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        }
+      );
+
+      if (!tablesResponse.ok) {
+        throw new Error(`HTTP ${tablesResponse.status}: 获取表格列表失败`);
+      }
+
+      const tablesData = await tablesResponse.json();
+      
+      if (tablesData.code !== 0) {
+        throw new Error(tablesData.msg || '获取表格列表失败');
+      }
+
+      if (!tablesData.data?.items || tablesData.data.items.length === 0) {
+        throw new Error('多维表中没有找到任何表格');
+      }
+
+      finalTableId = tablesData.data.items[0].table_id;
+      console.log('自动获取到第一个表格 ID:', finalTableId);
+      
+      // 保存自动获取的 tableId
+      await chrome.storage.local.set({ tableId: finalTableId });
+    }
+
     // 获取多维表数据
     const tableResponse = await fetch(
-      `${usedDomain}/open-apis/bitable/v1/apps/${config.appToken}/tables/${config.tableId}/records?page_size=500`,
+      `${usedDomain}/open-apis/bitable/v1/apps/${config.appToken}/tables/${finalTableId}/records?page_size=500`,
       {
         headers: {
           'Authorization': `Bearer ${accessToken}`

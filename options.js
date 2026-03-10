@@ -3,6 +3,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const form = document.getElementById('configForm');
   const saveBtn = document.getElementById('saveBtn');
   const testBtn = document.getElementById('testBtn');
+  const exportBtn = document.getElementById('exportBtn');
+  const importBtn = document.getElementById('importBtn');
+  const importFile = document.getElementById('importFile');
   const messageDiv = document.getElementById('message');
 
   // 加载已保存的配置
@@ -25,6 +28,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     await testConnection();
   });
 
+  // 导出配置
+  exportBtn.addEventListener('click', async () => {
+    await exportConfig();
+  });
+
+  // 导入配置
+  importBtn.addEventListener('click', () => {
+    importFile.click();
+  });
+
+  importFile.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      await importConfig(file);
+      e.target.value = ''; // 清空文件选择
+    }
+  });
+
   async function loadConfig() {
     try {
       const config = await chrome.storage.local.get(['appId', 'appSecret', 'bitableUrl']);
@@ -42,8 +63,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     try {
       // 支持的 URL 格式：
-      // https://xxx.feishu.cn/base/bascnXXX?table=tblXXX
-      // https://xxx.larksuite.com/base/bascnXXX?table=tblXXX
+      // 1. https://xxx.feishu.cn/base/bascnXXX?table=tblXXX
+      // 2. https://xxx.larksuite.com/base/bascnXXX?table=tblXXX
+      // 3. https://xxx.feishu.cn/base/PMgZbXR4davz22ssdmQcxDfQnjf (无 table 参数)
       
       const urlObj = new URL(url);
       const pathname = urlObj.pathname;
@@ -53,8 +75,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const pathMatch = pathname.match(/\/base\/([^\/\?]+)/);
       const appToken = pathMatch ? pathMatch[1] : null;
       
-      // 从查询参数中提取 Table ID
-      const tableId = searchParams.get('table');
+      // 从查询参数中提取 Table ID（可选）
+      const tableId = searchParams.get('table') || null;
       
       return { appToken, tableId };
     } catch (error) {
@@ -75,10 +97,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 解析多维表链接
     const { appToken, tableId } = parseTableUrl(bitableUrl);
     
-    if (!appToken || !tableId) {
+    if (!appToken) {
       showMessage('多维表链接格式不正确，请检查', 'error');
       return;
     }
+    
+    // tableId 可以为空，后续会自动获取第一个表格
 
     try {
       saveBtn.disabled = true;
@@ -115,7 +139,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 解析多维表链接
     const { appToken, tableId } = parseTableUrl(bitableUrl);
     
-    if (!appToken || !tableId) {
+    if (!appToken) {
       showMessage('多维表链接格式不正确，请检查', 'error');
       return;
     }
@@ -193,9 +217,45 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const accessToken = tokenData.tenant_access_token;
 
+      // 如果没有 tableId，获取第一个表格
+      let finalTableId = tableId;
+      
+      if (!finalTableId) {
+        console.log('未提供 Table ID，尝试获取第一个表格...');
+        
+        const tablesResponse = await fetch(
+          `${usedDomain}/open-apis/bitable/v1/apps/${appToken}/tables?page_size=1`,
+          {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`
+            }
+          }
+        );
+
+        if (!tablesResponse.ok) {
+          throw new Error(`HTTP ${tablesResponse.status}: 获取表格列表失败`);
+        }
+
+        const tablesData = await tablesResponse.json();
+        
+        if (tablesData.code !== 0) {
+          throw new Error(tablesData.msg || '获取表格列表失败');
+        }
+
+        if (!tablesData.data?.items || tablesData.data.items.length === 0) {
+          throw new Error('多维表中没有找到任何表格');
+        }
+
+        finalTableId = tablesData.data.items[0].table_id;
+        console.log('自动获取到第一个表格 ID:', finalTableId);
+        
+        // 保存自动获取的 tableId
+        await chrome.storage.local.set({ tableId: finalTableId });
+      }
+
       // 测试读取多维表
       const tableResponse = await fetch(
-        `${usedDomain}/open-apis/bitable/v1/apps/${appToken}/tables/${tableId}/records?page_size=1`,
+        `${usedDomain}/open-apis/bitable/v1/apps/${appToken}/tables/${finalTableId}/records?page_size=1`,
         {
           headers: {
             'Authorization': `Bearer ${accessToken}`
@@ -224,7 +284,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       // 保存使用的域名
       await chrome.storage.local.set({ apiDomain: usedDomain });
 
-      showMessage(`✓ 连接测试成功！使用 ${usedDomain === 'https://open.feishu.cn' ? '飞书' : 'Lark'} API`, 'success');
+      const tableIdMsg = tableId ? '' : `（自动使用第一个表格: ${finalTableId}）`;
+      showMessage(`✓ 连接测试成功！使用 ${usedDomain === 'https://open.feishu.cn' ? '飞书' : 'Lark'} API ${tableIdMsg}`, 'success');
     } catch (error) {
       console.error('测试连接错误:', error);
       showMessage('连接测试失败: ' + error.message, 'error');
@@ -243,6 +304,83 @@ document.addEventListener('DOMContentLoaded', async () => {
       setTimeout(() => {
         messageDiv.style.display = 'none';
       }, 3000);
+    }
+  }
+
+  async function exportConfig() {
+    try {
+      const config = await chrome.storage.local.get(['appId', 'appSecret', 'bitableUrl', 'appToken', 'tableId']);
+      
+      if (!config.appId || !config.appSecret || !config.bitableUrl) {
+        showMessage('没有可导出的配置，请先保存配置', 'error');
+        return;
+      }
+
+      const exportData = {
+        version: '1.0',
+        exportTime: new Date().toISOString(),
+        config: {
+          appId: config.appId,
+          appSecret: config.appSecret,
+          bitableUrl: config.bitableUrl,
+          appToken: config.appToken,
+          tableId: config.tableId || null
+        }
+      };
+
+      const jsonStr = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `team-prompt-config-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showMessage('✓ 配置已导出', 'success');
+    } catch (error) {
+      console.error('导出配置失败:', error);
+      showMessage('导出失败: ' + error.message, 'error');
+    }
+  }
+
+  async function importConfig(file) {
+    try {
+      const text = await file.text();
+      let importData;
+      
+      try {
+        importData = JSON.parse(text);
+      } catch (e) {
+        throw new Error('JSON 格式错误，请检查文件内容');
+      }
+
+      // 验证配置格式
+      if (!importData.config || !importData.config.appId || !importData.config.appSecret || !importData.config.bitableUrl) {
+        throw new Error('配置文件格式不正确，缺少必要字段');
+      }
+
+      // 填充表单
+      document.getElementById('appId').value = importData.config.appId;
+      document.getElementById('appSecret').value = importData.config.appSecret;
+      document.getElementById('bitableUrl').value = importData.config.bitableUrl;
+
+      // 保存到存储
+      await chrome.storage.local.set({
+        appId: importData.config.appId,
+        appSecret: importData.config.appSecret,
+        bitableUrl: importData.config.bitableUrl,
+        appToken: importData.config.appToken,
+        tableId: importData.config.tableId
+      });
+
+      showMessage('✓ 配置已导入并保存', 'success');
+    } catch (error) {
+      console.error('导入配置失败:', error);
+      showMessage('导入失败: ' + error.message, 'error');
     }
   }
 });
