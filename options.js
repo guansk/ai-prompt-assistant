@@ -101,22 +101,37 @@ document.addEventListener('DOMContentLoaded', async () => {
       showMessage('多维表链接格式不正确，请检查', 'error');
       return;
     }
-    
-    // tableId 可以为空，后续会自动获取第一个表格
 
     try {
       saveBtn.disabled = true;
       saveBtn.textContent = '保存中...';
+
+      // 如果没有 tableId，尝试自动获取
+      let finalTableId = tableId;
+      
+      if (!finalTableId) {
+        showMessage('正在获取表格信息...', 'info');
+        
+        try {
+          finalTableId = await fetchFirstTableId(appId, appSecret, appToken);
+          showMessage(`配置保存成功！（自动获取到表格 ID: ${finalTableId}）`, 'success');
+        } catch (error) {
+          // 获取失败也允许保存，后续使用时再获取
+          console.warn('自动获取 tableId 失败:', error);
+          showMessage('配置已保存，但未能自动获取表格 ID（使用时会自动获取）', 'info');
+        }
+      } else {
+        showMessage('配置保存成功！', 'success');
+      }
 
       await chrome.storage.local.set({
         appId,
         appSecret,
         bitableUrl,
         appToken,
-        tableId
+        tableId: finalTableId
       });
 
-      showMessage('配置保存成功！', 'success');
       saveBtn.textContent = '保存配置';
     } catch (error) {
       showMessage('保存失败: ' + error.message, 'error');
@@ -124,6 +139,81 @@ document.addEventListener('DOMContentLoaded', async () => {
     } finally {
       saveBtn.disabled = false;
     }
+  }
+
+  async function fetchFirstTableId(appId, appSecret, appToken) {
+    // 尝试两个 API 域名
+    const apiDomains = [
+      'https://open.feishu.cn',
+      'https://open.larksuite.com'
+    ];
+
+    let tokenData = null;
+    let usedDomain = null;
+
+    // 获取 access token
+    for (const domain of apiDomains) {
+      try {
+        const tokenResponse = await fetch(`${domain}/open-apis/auth/v3/tenant_access_token/internal`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            app_id: appId,
+            app_secret: appSecret
+          })
+        });
+
+        if (!tokenResponse.ok) continue;
+
+        const tokenText = await tokenResponse.text();
+        
+        try {
+          tokenData = JSON.parse(tokenText);
+          if (tokenData.code === 0) {
+            usedDomain = domain;
+            break;
+          }
+        } catch (e) {
+          continue;
+        }
+      } catch (e) {
+        continue;
+      }
+    }
+
+    if (!tokenData || tokenData.code !== 0) {
+      throw new Error('获取 Access Token 失败');
+    }
+
+    const accessToken = tokenData.tenant_access_token;
+
+    // 获取第一个表格
+    const tablesResponse = await fetch(
+      `${usedDomain}/open-apis/bitable/v1/apps/${appToken}/tables?page_size=1`,
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      }
+    );
+
+    if (!tablesResponse.ok) {
+      throw new Error(`HTTP ${tablesResponse.status}: 获取表格列表失败`);
+    }
+
+    const tablesData = await tablesResponse.json();
+    
+    if (tablesData.code !== 0) {
+      throw new Error(tablesData.msg || '获取表格列表失败');
+    }
+
+    if (!tablesData.data?.items || tablesData.data.items.length === 0) {
+      throw new Error('多维表中没有找到任何表格');
+    }
+
+    return tablesData.data.items[0].table_id;
   }
 
   async function testConnection() {
@@ -316,6 +406,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
+      let finalTableId = config.tableId;
+
+      // 如果没有 tableId，尝试获取（让导出的配置更完整）
+      if (!finalTableId && config.appId && config.appSecret && config.appToken) {
+        showMessage('正在获取表格信息...', 'info');
+        
+        try {
+          finalTableId = await fetchFirstTableId(config.appId, config.appSecret, config.appToken);
+          
+          // 保存获取到的 tableId
+          await chrome.storage.local.set({ tableId: finalTableId });
+          
+          console.log('导出前自动获取到 tableId:', finalTableId);
+        } catch (error) {
+          console.warn('导出前获取 tableId 失败:', error);
+          // 失败也继续导出，tableId 为 null
+        }
+      }
+
       const exportData = {
         version: '1.0',
         exportTime: new Date().toISOString(),
@@ -324,7 +433,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           appSecret: config.appSecret,
           bitableUrl: config.bitableUrl,
           appToken: config.appToken,
-          tableId: config.tableId || null
+          tableId: finalTableId || null
         }
       };
 
@@ -340,7 +449,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      showMessage('✓ 配置已导出', 'success');
+      const tableIdMsg = finalTableId ? `（包含表格 ID: ${finalTableId}）` : '（未包含表格 ID，导入后会自动获取）';
+      showMessage(`✓ 配置已导出 ${tableIdMsg}`, 'success');
     } catch (error) {
       console.error('导出配置失败:', error);
       showMessage('导出失败: ' + error.message, 'error');

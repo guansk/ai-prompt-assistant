@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const accessToken = tokenData.tenant_access_token;
 
-    // 如果没有 tableId，获取第一个表格
+    // 如果没有 tableId，获取第一个表格（只在第一次时）
     let finalTableId = config.tableId;
     
     if (!finalTableId) {
@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       finalTableId = tablesData.data.items[0].table_id;
       console.log('自动获取到第一个表格 ID:', finalTableId);
       
-      // 保存自动获取的 tableId
+      // 永久保存自动获取的 tableId，下次不再请求
       await chrome.storage.local.set({ tableId: finalTableId });
     }
 
